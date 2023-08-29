@@ -5,14 +5,14 @@
 
 # Lido Withdrawals Automation by Stakely.io
 
-Lido Withdrawals Automation is a command-line tool that assists with the LIDO validators withdrawal process. The tool streamlines the procedure by fetching validators data, generating withdrawal messages, signing them with a remote signer, encrypting the signed messages, and saving them to the output folder.
+Lido Withdrawals Automation is a command-line tool that assists with the LIDO validators withdrawal process. The tool streamlines the procedure by fetching validators data, generating withdrawal messages, signing them with a remote signer or keymanagerAPI, encrypting the signed messages, and saving them to the output folder.
 
 ![lido_withdrawals_automation](https://user-images.githubusercontent.com/8404210/231833396-3897fa1a-1669-4652-8469-c4bf0b5a811a.png)
 
 ## Features
 
 - Fetches validator data from the Kapi endpoint
-- Creates withdrawal messages and signs them using the remote signer
+- Creates withdrawal messages and signs them using the remote signer or the Keymanager API
 - Encrypts the signed messages using the specified password
 - Saves the encrypted messages to a specified output folder
 
@@ -20,7 +20,7 @@ Lido Withdrawals Automation is a command-line tool that assists with the LIDO va
 
 - Node.js >= v18.x
 - Access to a local kAPI endpoint
-- Access to a web3 remote signer endpoint
+- Access to a web3 remote signer endpoint or Keymanager API endpoint
 - Access to a beacon node endpoint
 
 ## Installation
@@ -51,6 +51,7 @@ Create a `.env` file in the project root folder and set the following environmen
 PERCENTAGE=<percentage_of_validators_to_withdraw>
 KAPI_URL=<kapi_endpoint_url>
 REMOTE_SIGNER_URL=<remote_signer_url>
+KEYMANAGER_URLS=<keymanagerapi_url>
 PASSWORD=<password_to_encrypt_signed_messages>
 OUTPUT_FOLDER=<path_to_output_folder>
 OPERATOR_ID=<operator_id>
@@ -64,6 +65,7 @@ Replace the placeholders with your actual values. For example:
 PERCENTAGE=10
 KAPI_URL=https://example.com/kapi
 REMOTE_SIGNER_URL=https://remotesigner.local:8080
+KEYMANAGER_URLS="https://example.com/, https://example2.com/"
 PASSWORD=mysecretpassword
 OUTPUT_FOLDER=/path/to/your/output-folder
 OPERATOR_ID=123

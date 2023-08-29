@@ -16,7 +16,8 @@
     "dotenv": "^16.0.3",
     "ethers": "^6.2.3",
     "inquirer": "^7.3.3",
-    "minimist": "^1.2.8"
+    "minimist": "^1.2.8",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "axios-mock-adapter": "^1.21.3",

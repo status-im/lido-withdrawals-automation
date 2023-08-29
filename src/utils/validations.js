@@ -19,6 +19,20 @@ function urlValidation(input) {
 	return isValidUrl(input) ? true : "Invalid URL. Please enter a valid URL.";
 }
 
+function urlsValidation(input) {
+	try {
+		const urls = input.split(",").map(s => s.trim());
+		for (let i = 0; i < urls.length; i++) {
+			if (!isValidUrl(urls[i])) {
+				return "Invalid URL. Please enter a valid URL.";
+			};
+		};
+		return true;
+	} catch (error) {
+		return false;
+	}
+}
+
 function outputFolderValidation(input) {
 	return fs.existsSync(input) ? true : "Output folder not found. Please enter a valid folder path.";
 }
@@ -52,5 +66,6 @@ module.exports = {
 	outputFolderValidation,
 	operatorIdValidation,
 	urlValidation,
-	moduleIdValidation
+	moduleIdValidation,
+	urlsValidation,
 };

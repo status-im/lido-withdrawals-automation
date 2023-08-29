@@ -1,8 +1,10 @@
 const inquirer = require("inquirer");
-const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation } = require("./src/utils/validations");
+const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation } = require("./src/utils/validations");
 const { fetchValidatorsData } = require("./src/withdrawal/fetchValidatorsData");
-const { signWithdrawalMessages } = require("./src/withdrawal/signWithdrawalMessages");
 const { encryptMessages } = require("./src/withdrawal/encryptMessages");
+
+const { keymanagerAPIMessages } = require("./src/withdrawal/keymanagerAPIMessages");
+const { signWithdrawalMessages } = require("./src/withdrawal/signWithdrawalMessages");
 
 // Load environment variables from the .env file
 require("dotenv").config();
@@ -19,6 +21,7 @@ async function main() {
 		percentage: process.env.PERCENTAGE,
 		kapiUrl: process.env.KAPI_URL,
 		remoteSignerUrl: process.env.REMOTE_SIGNER_URL,
+		keymanagerUrls: process.env.KEYMANAGER_URLS,
 		password: process.env.PASSWORD,
 		outputFolder: process.env.OUTPUT_FOLDER,
 		operatorId: process.env.OPERATOR_ID,
@@ -31,7 +34,8 @@ async function main() {
 		const validationFunction = {
 			percentage: percentageValidation,
 			kapiUrl: urlValidation,
-			remoteSignerUrl: urlValidation,
+			remoteSignerUrl: urlsValidation,
+			keymanagerUrls: urlsValidation,
 			password: passwordValidation,
 			outputFolder: outputFolderValidation,
 			operatorId: operatorIdValidation,
@@ -67,13 +71,30 @@ async function main() {
 		});
 	}
 
-	if (!env.remoteSignerUrl) {
-		questions.push({
-			type: "input",
-			name: "remoteSignerUrl",
-			message: "Please enter the remote signer URL:",
-			validate: urlValidation,
-		});
+	if (!env.remoteSignerUrl && !env.keymanagerUrls)  {
+		const readline = require('readline-sync');
+		const useRemoteSignerUrl = readline.question('Do you want to use remote signer URLs? (yes, no): ')
+		if (useRemoteSignerUrl === 'yes' || useRemoteSignerUrl === 'y') {
+			questions.push({
+				type: "input",
+				name: "remoteSignerUrl",
+				message: "Please enter the remote signer URL:",
+				validate: urlsValidation,
+			});
+		}
+	}
+
+	if (!env.keymanagerUrls && !env.remoteSignerUrl)  {
+		const readline = require('readline-sync');
+		const useKeymanagerAPI = readline.question('Do you want to use KeymanagerAPI URLs? (yes, no): ')
+		if (useKeymanagerAPI === 'yes' || useKeymanagerAPI === 'y') {
+			questions.push({
+				type: "input",
+				name: "keymanagerUrls",
+				message: "Please enter the Key Manager Urls:",
+				validate: urlsValidation,
+			});
+		};
 	}
 
 	if (!env.password) {
@@ -128,6 +149,7 @@ async function main() {
 		percentage: env.percentage || answers.percentage,
 		kapiUrl: env.kapiUrl || answers.kapiUrl,
 		remoteSignerUrl: env.remoteSignerUrl || answers.remoteSignerUrl,
+		keymanagerUrls: env.keymanagerUrls || answers.keymanagerUrls,
 		password: env.password || answers.password,
 		operatorId: env.operatorId || answers.operatorId,
 		outputFolder: env.outputFolder || answers.outputFolder,
@@ -145,14 +167,36 @@ async function main() {
 		params.percentage // Percentage of validators
 	);
 
+	let signatures = [];
 	console.log("Step 3: Creating the withdrawal messages and signing them with the remote signer...");
 
-	const signatures = await signWithdrawalMessages(
-		kapiJsonResponse.data, // Validators data (public keys)
-		kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
-		params.remoteSignerUrl, // Remote signer URL
-		params.beaconNodeUrl, // Beacon node URL
-	);
+	if(params.keymanagerUrls) {
+		const keymanagerUrls = params.keymanagerUrls.split(",").map(s => s.trim());
+		for (let i = 0; i < keymanagerUrls.length; i++) {
+			const keymanagerUrl = keymanagerUrls[i];
+			console.log(`KeymanagerAPI URL: ${keymanagerUrl}`);
+			signatures = signatures.concat(await keymanagerAPIMessages(
+				kapiJsonResponse.data, // Validators data (public keys)
+				kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
+				params.keymanagerUrl, // Remote signer URL
+				params.beaconNodeUrl, // Beacon node URL
+			));
+		};
+	}
+
+	if(params.remoteSignerUrl) {
+		const remoteSignerUrls = params.remoteSignerUrl.split(",").map(s => s.trim());
+		for (let i = 0; i < remoteSignerUrls.length; i++) {
+			const remoteSignerUrl = remoteSignerUrls[i];
+			console.log(`Signer URL: ${remoteSignerUrl}`);
+			signatures = signatures.concat(await signWithdrawalMessages(
+				kapiJsonResponse.data, // Validators data (public keys)
+				kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
+				params.remoteSignerUrl, // Remote signer URL
+				params.beaconNodeUrl, // Beacon node URL
+			));
+		};
+	}
 
 	console.log("\n");
 	console.log("Step 4: Encrypt the signed messages with the password file and save them to the output folder...");
