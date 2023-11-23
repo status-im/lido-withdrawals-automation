@@ -25,7 +25,7 @@ async function requestValidatorSignature(keymanagerUrl, body) {
 
 	const response = await axiosInstance.post(keymanagerUrl, body, {
 		headers: {
-			"Аccept": "application/json",
+			"Accept": "application/json",
 			"Content-Type": "application/json",
 		},
 		validateStatus: (status) => {
