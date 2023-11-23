@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 const MockAdapter = require("axios-mock-adapter");
-const {buildKeyManagerApiUrl, createRemoteSignerRequestBody, requestValidatorSignature, keymanagerAPIMessages } = require("../src/withdrawal/keymanagerAPIMessages.js");
+const {buildKeyManagerApiUrl, createKeymanagerRequestBody, requestValidatorSignature, keymanagerAPIMessages } = require("../src/withdrawal/keymanagerAPIMessages.js");
 const {getStateRoot, getForkInfo, getGenesisValidatorsRoot } = require("../src/withdrawal/beaconNodeEndpoint.js");
 const axiosInstance = require("../src/utils/axiosInstance.js");
 
@@ -8,19 +8,19 @@ const mock = new MockAdapter(axiosInstance);
 
 describe("buildKeyManagerApiUrl", () => {
 	test("should return the correct remote signer URL", () => {
-		const remoteSignerUrl = "https://example.com";
+		const keymanagerUrl = "https://example.com";
 
 		const validatorKey = "0x123456789abcdef";
         const epoch = 3000
 
 		const expectedResult = "https://example.com/eth/v1/validator/0x123456789abcdef/voluntary_exit?epoch=3000";
-		const result = buildKeyManagerApiUrl(remoteSignerUrl, validatorKey, epoch);
+		const result = buildKeyManagerApiUrl(keymanagerUrl, validatorKey, epoch);
 
 		expect(result).toEqual(expectedResult);
 	});
 });
 
-describe("createRemoteSignerRequestBody", () => {
+describe("createKeymanagerRequestBody", () => {
 	test("should return the correct remote signer request body", () => {
 		const epoch = 12345;
 
@@ -47,7 +47,7 @@ describe("createRemoteSignerRequestBody", () => {
 				validator_index: "98765",
 			},
 		};
-		const result = createRemoteSignerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
+		const result = createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
 
 		expect(result).toEqual(expectedResult);
 	});
@@ -56,7 +56,7 @@ describe("createRemoteSignerRequestBody", () => {
 describe("requestValidatorSignature", () => {
 
 	test("should return the correct response from remote signer", async () => {
-		const remoteSignerUrl = "http://localhost:3001";
+		const keymanagerUrl = "http://localhost:3001";
 
 		const validatorKey = "0x123456789abcdef";
 		const epoch = 12345;
@@ -68,8 +68,8 @@ describe("requestValidatorSignature", () => {
 		};
 		const genesis_validators_root = "0x123456789abcdef";
 
-		const url = buildKeyManagerApiUrl(remoteSignerUrl, validatorKey, epoch);
-		const body = createRemoteSignerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
+		const url = buildKeyManagerApiUrl(keymanagerUrl, validatorKey, epoch);
+		const body = createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
 
 		const mockResponse = {
 			signature: "0x987654321fedcba12987654321fedcba12987654321fedcba12987654321fedcba12987654321fedcba1254354321fedcba154321fedcba54321fedcba154321fedcba154321fedcba1154321fedcba154321fedcba154321fedcba121fedcba",
@@ -84,7 +84,7 @@ describe("requestValidatorSignature", () => {
 	});
 
 	test("should not thrown an expection when a 404 http response is received from remote signer", async () => {
-		const remoteSignerUrl = "http://localhost:3001";
+		const keymanagerUrl = "http://localhost:3001";
 
 		const validatorKey = "0x123456789abcdef";
 		const epoch = 12345;
@@ -96,8 +96,8 @@ describe("requestValidatorSignature", () => {
 		};
 		const genesis_validators_root = "0x123456789abcdef";
 
-		const url = buildKeyManagerApiUrl(remoteSignerUrl, validatorKey, epoch);
-		const body = createRemoteSignerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
+		const url = buildKeyManagerApiUrl(keymanagerUrl, validatorKey, epoch);
+		const body = createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
 
 		const mockResponse = "Not Found";
 
@@ -111,7 +111,7 @@ describe("requestValidatorSignature", () => {
 	});
 
 	test("should throw an error if the signature length is invalid", async () => {
-		const remoteSignerUrl = "http://localhost:3001";
+		const keymanagerUrl = "http://localhost:3001";
 
 		const validatorKey = "0x123456789abcdef";
 		const epoch = 12345;
@@ -123,8 +123,8 @@ describe("requestValidatorSignature", () => {
 		};
 		const genesis_validators_root = "0x123456789abcdef";
 
-		const url = buildKeyManagerApiUrl(remoteSignerUrl, validatorKey, epoch);
-		const body = createRemoteSignerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
+		const url = buildKeyManagerApiUrl(keymanagerUrl, validatorKey, epoch);
+		const body = createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
 
 		const mockResponse = {
 			signature: "0x987654321fedcba", // This signature has an invalid length
@@ -152,7 +152,7 @@ describe("keymanagerAPIMessages", () => {
 		];
 
 		const epoch = 1;
-		const remoteSignerUrl = "http://localhost:3001";
+		const keymanagerUrl = "http://localhost:3001";
 		const beaconNodeEndpoint = "http://localhost:5052";
 
 		const stateRoot = "0x88f68b30714e78da09bae0065a11167dc4c8b3ef9203c30ae973fb1eb14a38b6";
@@ -177,10 +177,10 @@ describe("keymanagerAPIMessages", () => {
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/states/${stateRoot}/fork`).reply(200, { data: fork });
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/genesis`).reply(200, { data: { genesis_validators_root } });
 
-		mock.onPost(`${remoteSignerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature1 });
-		mock.onPost(`${remoteSignerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature2 });
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature1 });
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature2 });
 
-		const result = await keymanagerAPIMessages(validators, epoch, remoteSignerUrl, beaconNodeEndpoint);
+		const result = await keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNodeEndpoint);
 
 		expect(result).toEqual([
 		{
@@ -204,7 +204,7 @@ describe("keymanagerAPIMessages", () => {
 		];
 
 		const epoch = 1;
-		const remoteSignerUrl = "http://localhost:3001";
+		const keymanagerUrl = "http://localhost:3001";
 		const beaconNodeEndpoint = "http://localhost:5052";
 
 		const stateRoot = "0x88f68b30714e78da09bae0065a11167dc4c8b3ef9203c30ae973fb1eb14a38b6";
@@ -228,10 +228,10 @@ describe("keymanagerAPIMessages", () => {
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/states/${stateRoot}/fork`).reply(200, { data: fork });
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/genesis`).reply(200, { data: { genesis_validators_root } });
 
-		mock.onPost(`${remoteSignerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature1 });
-		mock.onPost(`${remoteSignerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(404);
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature1 });
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(404);
 
-		const result = await keymanagerAPIMessages(validators, epoch, remoteSignerUrl, beaconNodeEndpoint);
+		const result = await keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNodeEndpoint);
 
 		expect(result).toEqual([
 		{
