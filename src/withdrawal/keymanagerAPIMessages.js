@@ -5,7 +5,7 @@ function buildKeyManagerApiUrl(keymanagerUrl, validatorKey, epoch) {
 	return `${keymanagerUrl}/eth/v1/validator/${validatorKey}/voluntary_exit?epoch=${epoch}`;
 }
 
-function createRemoteSignerRequestBody(epoch, validatorIndex, fork, genesis_validators_root) {
+function createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root) {
 	return {
 		type: "VOLUNTARY_EXIT",
 		fork_info: {
@@ -26,19 +26,20 @@ async function requestValidatorSignature(keymanagerUrl, body) {
 	const response = await axiosInstance.post(keymanagerUrl, body, {
 		headers: {
 			"Аccept": "application/json",
+			"Content-Type": "application/json",
 		},
 		validateStatus: (status) => {
 			return (status === 200 || status === 404);
 		},
 	});
 
-	// 404 means that the key is not found in the remote signer
+	// 404 means that the key is not found in the keymanager
 	if(response.status === 404){
 		return response;
 	}
 
 	if(!response.data || !response.data.signature || response.data.signature.length !== 194){
-		throw new Error("Remote signer is not returning a valid signature. Url: " + keymanagerUrl);
+		throw new Error("Keymanager is not returning a valid signature. Url: " + keymanagerUrl);
 	}
 
 	return response;
@@ -67,23 +68,22 @@ async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNod
 		console.log("Requesting signature " + i + "/" + validators.length + " (Validator #" + validator.validatorIndex + ")");
 
 		let completeKeymanagerUrl;
-		let body;
-		body = undefined;
+		const body = createKeymanagerRequestBody(epoch, validator.validatorIndex, fork, genesis_validators_root);
 		completeKeymanagerUrl = buildKeyManagerApiUrl(keymanagerUrl, validator.key, epoch);
 
 		try {
-			const remoteSignerResponse = await requestValidatorSignature(completeKeymanagerUrl, body);
+			const remoteKeymanager = await requestValidatorSignature(completeKeymanagerUrl, body);
 
-			if (remoteSignerResponse.status === 404) {
-				console.log("Key not found in remote signer. " +  "(Validator #" + validator.validatorIndex + ")" + " Skipping...");
+			if (remoteKeymanager.status === 404) {
+				console.log("Key not found in keymanager. " +  "(Validator #" + validator.validatorIndex + ")" + " Skipping...");
 				continue;
 			}
 
-			if (remoteSignerResponse.status !== 200) {
-				throw new Error("Remote signer returned status code " + remoteSignerResponse.status);
+			if (remoteKeymanager.status !== 200) {
+				throw new Error("Keymanager returned status code " + remoteKeymanager.status);
 			}
 
-			const signature = remoteSignerResponse.data.signature;
+			const signature = remoteKeymanager.data.signature;
 			okSignatures++;
 
 			console.log("Signature of validator #" + validator.validatorIndex + " generated successfully.");
@@ -96,8 +96,8 @@ async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNod
 
 		} catch (error) {
 			throw new Error(
-				"Failed to fetch data from the remote signer (Url: " + keymanagerUrl + "). " + error.message +
-				"\n Complete URL: " + "${keymanagerUrl}/eth/v1/validator/${validatorKey}/voluntary_exit?epoch=${epoch}" +
+				"Failed to fetch data from the keymanager (Url: " + keymanagerUrl + "). " + error.message +
+				"\n Complete URL: " + completeKeymanagerUrl +
 				"\n Body: " + JSON.stringify(body)
 			);
 		}
@@ -114,7 +114,7 @@ async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNod
 
 module.exports = {
 	buildKeyManagerApiUrl,
-	createRemoteSignerRequestBody,
+	createKeymanagerRequestBody,
 	requestValidatorSignature,
 	keymanagerAPIMessages
 };

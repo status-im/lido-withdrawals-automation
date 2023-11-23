@@ -178,7 +178,7 @@ async function main() {
 			signatures = signatures.concat(await keymanagerAPIMessages(
 				kapiJsonResponse.data, // Validators data (public keys)
 				kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
-				params.keymanagerUrl, // Remote signer URL
+				keymanagerUrl, // Remote signer URL
 				params.beaconNodeUrl, // Beacon node URL
 			));
 		};
@@ -192,7 +192,7 @@ async function main() {
 			signatures = signatures.concat(await signWithdrawalMessages(
 				kapiJsonResponse.data, // Validators data (public keys)
 				kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
-				params.remoteSignerUrl, // Remote signer URL
+				remoteSignerUrl, // Remote signer URL
 				params.beaconNodeUrl, // Beacon node URL
 			));
 		};
