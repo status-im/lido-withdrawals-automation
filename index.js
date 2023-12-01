@@ -50,7 +50,7 @@ async function main() {
 		const validationResult = validationFunction(value);
 		if (value && validationResult !== true) {
 			console.error(`Error in environment variable ${key}: ${validationResult}`);
-			return;
+			process.exit(1);
 		}
 	}
 
