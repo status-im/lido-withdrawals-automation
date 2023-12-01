@@ -20,13 +20,14 @@ function createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_valida
 
 }
 
-async function requestValidatorSignature(keymanagerUrl, body) {
+async function requestValidatorSignature(keymanagerUrl, body, token) {
 
 
 	const response = await axiosInstance.post(keymanagerUrl, body, {
 		headers: {
 			"Accept": "application/json",
 			"Content-Type": "application/json",
+			"Authorization": "Bearer " + token,
 		},
 		validateStatus: (status) => {
 			return (status === 200 || status === 404);
@@ -45,7 +46,7 @@ async function requestValidatorSignature(keymanagerUrl, body) {
 	return response;
 }
 
-async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNodeEndpoint) {
+async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNodeEndpoint, token) {
 
 	const stateRoot = await getStateRoot(beaconNodeEndpoint);
 	console.log("State root: " + stateRoot);
@@ -72,7 +73,7 @@ async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNod
 		completeKeymanagerUrl = buildKeyManagerApiUrl(keymanagerUrl, validator.key, epoch);
 
 		try {
-			const remoteKeymanager = await requestValidatorSignature(completeKeymanagerUrl, body);
+			const remoteKeymanager = await requestValidatorSignature(completeKeymanagerUrl, body, token);
 
 			if (remoteKeymanager.status === 404) {
 				console.log("Key not found in keymanager. " +  "(Validator #" + validator.validatorIndex + ")" + " Skipping...");

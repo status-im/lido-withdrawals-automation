@@ -37,13 +37,17 @@ function outputFolderValidation(input) {
 	return fs.existsSync(input) ? true : "Output folder not found. Please enter a valid folder path.";
 }
 
+function keymanagerTokenFolderValidation(input) {
+	return fs.existsSync(input) ? true : "Token folder not found. Please enter a valid folder path.";
+}
+
 function operatorIdValidation(value) {
-    
+
 	// Don't allow decimal numbers
 	if (value.includes(".")) {
 		return "Please enter a valid integer greater than 0 for the operator ID.";
 	}
-    
+
 	const intValue = parseInt(value, 10);
 	if (isNaN(intValue) || intValue <= 0) {
 		return "Please enter a valid integer greater than 0 for the operator ID.";
@@ -64,6 +68,7 @@ module.exports = {
 	percentageValidation,
 	passwordValidation,
 	outputFolderValidation,
+	keymanagerTokenFolderValidation,
 	operatorIdValidation,
 	urlValidation,
 	moduleIdValidation,

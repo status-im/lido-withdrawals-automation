@@ -1,5 +1,7 @@
+const fs = require('fs');
+
 const inquirer = require("inquirer");
-const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation } = require("./src/utils/validations");
+const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation, keymanagerTokenFolderValidation } = require("./src/utils/validations");
 const { fetchValidatorsData } = require("./src/withdrawal/fetchValidatorsData");
 const { encryptMessages } = require("./src/withdrawal/encryptMessages");
 
@@ -27,6 +29,7 @@ async function main() {
 		operatorId: process.env.OPERATOR_ID,
 		beaconNodeUrl: process.env.BEACON_NODE_URL,
 		moduleId: process.env.MODULE_ID,
+		keymanagerTokenFile: process.env.KEYMANAGER_TOKEN_FILE,
 	};
 
 	// Validate environment variables
@@ -41,6 +44,7 @@ async function main() {
 			operatorId: operatorIdValidation,
 			beaconNodeUrl: urlValidation,
 			moduleId: moduleIdValidation,
+			keymanagerTokenFile: keymanagerTokenFolderValidation,
 		}[key];
 
 		const validationResult = validationFunction(value);
@@ -155,6 +159,7 @@ async function main() {
 		outputFolder: env.outputFolder || answers.outputFolder,
 		beaconNodeUrl: env.beaconNodeUrl || answers.beaconNodeUrl,
 		moduleId: env.moduleId || answers.moduleId,
+		keymanagerTokenFile: env.keymanagerTokenFile,
 	};
 
 	// Get validators data from Kapi
@@ -174,12 +179,14 @@ async function main() {
 		const keymanagerUrls = params.keymanagerUrls.split(",").map(s => s.trim());
 		for (let i = 0; i < keymanagerUrls.length; i++) {
 			const keymanagerUrl = keymanagerUrls[i];
+			const token = fs.readFileSync(params.keymanagerTokenFile, 'utf-8');
 			console.log(`KeymanagerAPI URL: ${keymanagerUrl}`);
 			signatures = signatures.concat(await keymanagerAPIMessages(
 				kapiJsonResponse.data, // Validators data (public keys)
 				kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
 				keymanagerUrl, // Remote signer URL
 				params.beaconNodeUrl, // Beacon node URL
+				token, // Keymanager token
 			));
 		};
 	}
