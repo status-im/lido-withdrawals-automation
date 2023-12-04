@@ -39,7 +39,8 @@ async function requestValidatorSignature(keymanagerUrl, body, token) {
 		return response;
 	}
 
-	if(!response.data || !response.data.signature || response.data.signature.length !== 194){
+	if(!response.data.data || !response.data.data.signature || response.data.data.signature.length !== 194){
+		console.log (response);
 		throw new Error("Keymanager is not returning a valid signature. Url: " + keymanagerUrl);
 	}
 
@@ -84,7 +85,7 @@ async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNod
 				throw new Error("Keymanager returned status code " + remoteKeymanager.status);
 			}
 
-			const signature = remoteKeymanager.data.signature;
+			const signature = remoteKeymanager.data.data.signature;
 			okSignatures++;
 
 			console.log("Signature of validator #" + validator.validatorIndex + " generated successfully.");

@@ -179,7 +179,7 @@ async function main() {
 		const keymanagerUrls = params.keymanagerUrls.split(",").map(s => s.trim());
 		for (let i = 0; i < keymanagerUrls.length; i++) {
 			const keymanagerUrl = keymanagerUrls[i];
-			const token = fs.readFileSync(params.keymanagerTokenFile, 'utf-8');
+			const token = fs.readFileSync(params.keymanagerTokenFile, 'utf-8').trim();
 			console.log(`KeymanagerAPI URL: ${keymanagerUrl}`);
 			signatures = signatures.concat(await keymanagerAPIMessages(
 				kapiJsonResponse.data, // Validators data (public keys)
