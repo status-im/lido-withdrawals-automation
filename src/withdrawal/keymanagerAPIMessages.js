@@ -40,7 +40,6 @@ async function requestValidatorSignature(keymanagerUrl, body, token) {
 	}
 
 	if(!response.data.data || !response.data.data.signature || response.data.data.signature.length !== 194){
-		console.log (response);
 		throw new Error("Keymanager is not returning a valid signature. Url: " + keymanagerUrl);
 	}
 
