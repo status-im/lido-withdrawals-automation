@@ -72,7 +72,9 @@ describe("requestValidatorSignature", () => {
 		const body = createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
 
 		const mockResponse = {
-			signature: "0x987654321fedcba12987654321fedcba12987654321fedcba12987654321fedcba12987654321fedcba1254354321fedcba154321fedcba54321fedcba154321fedcba154321fedcba1154321fedcba154321fedcba154321fedcba121fedcba",
+			data: {
+				signature: "0x987654321fedcba12987654321fedcba12987654321fedcba12987654321fedcba12987654321fedcba1254354321fedcba154321fedcba54321fedcba154321fedcba154321fedcba1154321fedcba154321fedcba154321fedcba121fedcba",
+			}
 		};
 
 		mock.onPost(url, body).reply(200, mockResponse);
@@ -127,7 +129,9 @@ describe("requestValidatorSignature", () => {
 		const body = createKeymanagerRequestBody(epoch, validatorIndex, fork, genesis_validators_root);
 
 		const mockResponse = {
-			signature: "0x987654321fedcba", // This signature has an invalid length
+			data: {
+				signature: "0x987654321fedcba", // This signature has an invalid length
+			}
 		};
 
 		mock.onPost(url, body).reply(200, mockResponse);
@@ -177,8 +181,8 @@ describe("keymanagerAPIMessages", () => {
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/states/${stateRoot}/fork`).reply(200, { data: fork });
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/genesis`).reply(200, { data: { genesis_validators_root } });
 
-		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature1 });
-		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature2 });
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { data:{signature: signature1 }});
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(200, { data:{signature: signature2 }});
 
 		const result = await keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNodeEndpoint);
 
@@ -228,7 +232,7 @@ describe("keymanagerAPIMessages", () => {
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/states/${stateRoot}/fork`).reply(200, { data: fork });
 		mock.onGet(`${beaconNodeEndpoint}/eth/v1/beacon/genesis`).reply(200, { data: { genesis_validators_root } });
 
-		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { signature: signature1 });
+		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key1/voluntary_exit?epoch=${epoch}`).reply(200, { data:{signature: signature1 }});
 		mock.onPost(`${keymanagerUrl}/eth/v1/validator/key2/voluntary_exit?epoch=${epoch}`).reply(404);
 
 		const result = await keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNodeEndpoint);

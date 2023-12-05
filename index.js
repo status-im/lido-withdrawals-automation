@@ -1,5 +1,7 @@
+const fs = require('fs');
+
 const inquirer = require("inquirer");
-const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation } = require("./src/utils/validations");
+const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation, keymanagerTokenFolderValidation, overwriteValidation } = require("./src/utils/validations");
 const { fetchValidatorsData } = require("./src/withdrawal/fetchValidatorsData");
 const { encryptMessages } = require("./src/withdrawal/encryptMessages");
 
@@ -27,26 +29,32 @@ async function main() {
 		operatorId: process.env.OPERATOR_ID,
 		beaconNodeUrl: process.env.BEACON_NODE_URL,
 		moduleId: process.env.MODULE_ID,
+		keymanagerTokenFile: process.env.KEYMANAGER_TOKEN_FILE,
+		overwrite: process.env.OVERWRITE ?? "prompt",
 	};
 
 	// Validate environment variables
 	for (const [key, value] of Object.entries(env)) {
-		const validationFunction = {
+		const validationFunctions = {
 			percentage: percentageValidation,
 			kapiUrl: urlValidation,
-			remoteSignerUrl: urlsValidation,
-			keymanagerUrls: urlsValidation,
+			remoteSignerUrl: urlsValidation (env.keymanagerUrls == null),
+			keymanagerUrls: urlsValidation (env.remoteSignerUrl == null),
 			password: passwordValidation,
 			outputFolder: outputFolderValidation,
 			operatorId: operatorIdValidation,
 			beaconNodeUrl: urlValidation,
 			moduleId: moduleIdValidation,
-		}[key];
+			keymanagerTokenFile: keymanagerTokenFolderValidation (env.keymanagerUrls != null),
+			overwrite: overwriteValidation,
+		};
+
+		const validationFunction = validationFunctions[key];
 
 		const validationResult = validationFunction(value);
-		if (value && validationResult !== true) {
+		if (validationResult !== true) {
 			console.error(`Error in environment variable ${key}: ${validationResult}`);
-			return;
+			process.exit(1);
 		}
 	}
 
@@ -155,6 +163,8 @@ async function main() {
 		outputFolder: env.outputFolder || answers.outputFolder,
 		beaconNodeUrl: env.beaconNodeUrl || answers.beaconNodeUrl,
 		moduleId: env.moduleId || answers.moduleId,
+		keymanagerTokenFile: env.keymanagerTokenFile,
+		overwrite: env.overwrite,
 	};
 
 	// Get validators data from Kapi
@@ -174,12 +184,14 @@ async function main() {
 		const keymanagerUrls = params.keymanagerUrls.split(",").map(s => s.trim());
 		for (let i = 0; i < keymanagerUrls.length; i++) {
 			const keymanagerUrl = keymanagerUrls[i];
+			const token = fs.readFileSync(params.keymanagerTokenFile, 'utf-8').trim();
 			console.log(`KeymanagerAPI URL: ${keymanagerUrl}`);
 			signatures = signatures.concat(await keymanagerAPIMessages(
 				kapiJsonResponse.data, // Validators data (public keys)
 				kapiJsonResponse.meta.clBlockSnapshot.epoch, // Epoch from Kapi
 				keymanagerUrl, // Remote signer URL
 				params.beaconNodeUrl, // Beacon node URL
+				token, // Keymanager token
 			));
 		};
 	}
@@ -205,6 +217,7 @@ async function main() {
 		signatures, // Signed messages
 		params.outputFolder, // Output folder
 		params.password, // File with the password
+		params.overwrite,
 	);
 
 	console.log("\n");

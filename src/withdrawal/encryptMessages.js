@@ -41,41 +41,46 @@ async function overwritePrompt(fileName) {
 			default: true,
 		},
 	]);
-  
+
 	return question.overwrite;
 }
 
-async function encryptMessages(signatures, outputFolder, password) {
+async function encryptMessages(signatures, outputFolder, password, overwrite) {
 	let encryptedSignatures = 0;
 	let skippedSignatures = 0;
 	for (const signature of signatures) {
 		const fullMessage = buildFullMessage(signature);
 		const fullMessageJson = JSON.stringify(fullMessage);
 		const fileName = `${signature.validator_index}_${signature.validator_key}_exit.json`;
-    
+
 		if (fs.existsSync(`${outputFolder}/${fileName}`)) {
-			const overwrite = await overwritePrompt(fileName);
-			if (!overwrite) {
+			if (overwrite === "never") {
 				skippedSignatures++;
-				continue;
+					continue;
+			} else if (overwrite === "prompt") {
+				if (!(await overwritePrompt(fileName))) {
+					skippedSignatures++;
+					continue;
+				}
 			}
+			console.log(`Overwriting existing file: ${fileName}`)
 		}
-    
+
 		const store = await encryptJsonMessage(fullMessageJson, password);
 		const successfulWrite = await saveEncryptedMessageToFile(outputFolder, fileName, store);
-    
+
 		if (successfulWrite) {
 			encryptedSignatures++;
 		}
 	}
-  
+
 	console.log("\n");
 	console.log("================= [ENCRYPTION REPORT] =================");
 	console.log("Signatures to encrypt: " + signatures.length);
 	console.log("Successful encrypted signatures: " + encryptedSignatures + "/" + signatures.length);
 	console.log("Skipped by user: " + skippedSignatures);
 	console.log("Failed (not skipped by user): " + (signatures.length - encryptedSignatures - skippedSignatures));
-  
+
 	console.log("\n");
 	if (signatures.length - encryptedSignatures - skippedSignatures !== 0) {
 		console.error("Some signatures were not encrypted. Check the report above.");
