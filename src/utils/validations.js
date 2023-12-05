@@ -19,26 +19,37 @@ function urlValidation(input) {
 	return isValidUrl(input) ? true : "Invalid URL. Please enter a valid URL.";
 }
 
-function urlsValidation(input) {
+const urlsValidation = (isRequired) => (input) => {
+	if (!isRequired) return true;
 	try {
-		const urls = input.split(",").map(s => s.trim());
-		for (let i = 0; i < urls.length; i++) {
-			if (!isValidUrl(urls[i])) {
-				return "Invalid URL. Please enter a valid URL.";
-			};
-		};
-		return true;
-	} catch (error) {
-		return false;
-	}
-}
+		  const urls = input.split(",").map(s => s.trim());
+		  for (let i = 0; i < urls.length; i++) {
+			  if (!isValidUrl(urls[i])) {
+				  return "Invalid URL. Please enter a valid URL.";
+			  };
+		  };
+		  return true;
+	  } catch (error) {
+		  return "URL is not valid";
+	  }
+  };
 
 function outputFolderValidation(input) {
 	return fs.existsSync(input) ? true : "Output folder not found. Please enter a valid folder path.";
 }
 
-function keymanagerTokenFolderValidation(input) {
-	return fs.existsSync(input) ? true : "Token folder not found. Please enter a valid folder path.";
+const keymanagerTokenFolderValidation = (isRequired) => (input) => {
+    if (!isRequired) return true;
+    try {
+        if(input === undefined) {
+            return "KEYMANAGER_TOKEN_FILE is not defined.";
+        }
+        const token = fs.readFileSync(input, 'utf8')?? "";
+        return token.trim() == "" ? "Token file is empty.":true;
+    } catch (e) {
+        return "The token file cannot be found or does not have access rights. Please enter a valid file path.";
+    }
+};
 
 function overwriteValidation(value) {
 	if(value.trim() !== "always" && value.trim() !== "never" && value.trim() !== "prompt") {

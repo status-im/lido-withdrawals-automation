@@ -30,26 +30,29 @@ async function main() {
 		beaconNodeUrl: process.env.BEACON_NODE_URL,
 		moduleId: process.env.MODULE_ID,
 		keymanagerTokenFile: process.env.KEYMANAGER_TOKEN_FILE,
-		alwaysOverwrite: process.env.ALWAYS_OVERWRITE,
+		overwrite: process.env.OVERWRITE ?? "prompt",
 	};
 
 	// Validate environment variables
 	for (const [key, value] of Object.entries(env)) {
-		const validationFunction = {
+		const validationFunctions = {
 			percentage: percentageValidation,
 			kapiUrl: urlValidation,
-			remoteSignerUrl: urlsValidation,
-			keymanagerUrls: urlsValidation,
+			remoteSignerUrl: urlsValidation (env.keymanagerUrls == null),
+			keymanagerUrls: urlsValidation (env.remoteSignerUrl == null),
 			password: passwordValidation,
 			outputFolder: outputFolderValidation,
 			operatorId: operatorIdValidation,
 			beaconNodeUrl: urlValidation,
 			moduleId: moduleIdValidation,
-			keymanagerTokenFile: keymanagerTokenFolderValidation,
-		}[key];
+			keymanagerTokenFile: keymanagerTokenFolderValidation (env.keymanagerUrls != null),
+			overwrite: overwriteValidation,
+		};
+
+		const validationFunction = validationFunctions[key];
 
 		const validationResult = validationFunction(value);
-		if (value && validationResult !== true) {
+		if (validationResult !== true) {
 			console.error(`Error in environment variable ${key}: ${validationResult}`);
 			process.exit(1);
 		}
