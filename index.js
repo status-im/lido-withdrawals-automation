@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const inquirer = require("inquirer");
-const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation, keymanagerTokenFolderValidation } = require("./src/utils/validations");
+const { percentageValidation, passwordValidation, outputFolderValidation, operatorIdValidation, urlValidation, moduleIdValidation, urlsValidation, keymanagerTokenFolderValidation, overwriteValidation } = require("./src/utils/validations");
 const { fetchValidatorsData } = require("./src/withdrawal/fetchValidatorsData");
 const { encryptMessages } = require("./src/withdrawal/encryptMessages");
 
@@ -30,6 +30,7 @@ async function main() {
 		beaconNodeUrl: process.env.BEACON_NODE_URL,
 		moduleId: process.env.MODULE_ID,
 		keymanagerTokenFile: process.env.KEYMANAGER_TOKEN_FILE,
+		alwaysOverwrite: process.env.ALWAYS_OVERWRITE,
 	};
 
 	// Validate environment variables
@@ -160,6 +161,7 @@ async function main() {
 		beaconNodeUrl: env.beaconNodeUrl || answers.beaconNodeUrl,
 		moduleId: env.moduleId || answers.moduleId,
 		keymanagerTokenFile: env.keymanagerTokenFile,
+		overwrite: env.overwrite,
 	};
 
 	// Get validators data from Kapi
@@ -212,6 +214,7 @@ async function main() {
 		signatures, // Signed messages
 		params.outputFolder, // Output folder
 		params.password, // File with the password
+		params.overwrite,
 	);
 
 	console.log("\n");

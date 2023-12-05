@@ -58,6 +58,7 @@ OPERATOR_ID=<operator_id>
 BEACON_NODE_URL=<beacon_node_url>
 MODULE_ID=<module_id>
 KEYMANAGER_TOKEN_FILE=<keymanager_token_file>
+OVERWRITE=<always | never | prompt> (default is `prompt`)
 ```
 
 Replace the placeholders with your actual values. For example:
@@ -73,6 +74,7 @@ OPERATOR_ID=123
 BEACON_NODE_URL=http://localhost:5052
 MODULE_ID=1
 KEYMANAGER_TOKEN_FILE="./token"
+OVERWRITE="always"
 ```
 
 ## Usage

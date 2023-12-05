@@ -39,6 +39,12 @@ function outputFolderValidation(input) {
 
 function keymanagerTokenFolderValidation(input) {
 	return fs.existsSync(input) ? true : "Token folder not found. Please enter a valid folder path.";
+
+function overwriteValidation(value) {
+	if(value.trim() !== "always" && value.trim() !== "never" && value.trim() !== "prompt") {
+		return "OVERWRITE must be 'always', 'never' or 'prompt'.";
+	}
+	return true;
 }
 
 function operatorIdValidation(value) {
@@ -73,4 +79,5 @@ module.exports = {
 	urlValidation,
 	moduleIdValidation,
 	urlsValidation,
+	overwriteValidation,
 };
