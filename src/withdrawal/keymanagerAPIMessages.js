@@ -91,7 +91,9 @@ async function keymanagerAPIMessages(validators, epoch, keymanagerUrl, beaconNod
 
 			signatures.push({
 				validator_index: validator.validatorIndex,
+				validator_key: validator.key,
 				signature: signature,
+				fork_version: fork.current_version,
 				epoch: epoch,
 			});
 
