@@ -189,12 +189,16 @@ describe("keymanagerAPIMessages", () => {
 		expect(result).toEqual([
 		{
 			epoch: epoch,
+			fork_version: "0x03001020",
 			validator_index: 1,
+			validator_key: "key1",
 			signature: signature1,
 		},
 		{
 			epoch: epoch,
+			fork_version: "0x03001020",
 			validator_index: 2,
+			validator_key: "key2",
 			signature: signature2,
 		},
 		]);
@@ -240,7 +244,9 @@ describe("keymanagerAPIMessages", () => {
 		expect(result).toEqual([
 		{
 			epoch: epoch,
+			fork_version: "0x03001020",
 			validator_index: 1,
+			validator_key: "key1",
 			signature: signature1,
 		},
 		]);
