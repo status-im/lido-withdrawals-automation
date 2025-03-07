@@ -73,7 +73,7 @@ function operatorIdValidation(value) {
 }
 
 function passwordValidation(value) {
-	return value.trim() !== "" ? true : "The password cannot be empty.";
+	return (value ?? '').trim() !== "" ? true : "The password cannot be empty.";
 }
 
 function moduleIdValidation(value) {
